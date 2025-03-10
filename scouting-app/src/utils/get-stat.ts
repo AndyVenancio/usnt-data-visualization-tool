@@ -28,3 +28,8 @@ export function getCleanPosition(player: Player) : string {
     const num = "(" + player.position_general.split("_")[1] + ")";
     return abv + " " + num;
 }
+
+export function getOnlyStatsNames(player: Player) : string[] {
+    const nonStatKeys = ["player_name", "birth_date", "position_general", "team_name", "competition_name", "season_name"];
+    return Object.keys(player).filter(key => (!nonStatKeys.includes(key) && !key.endsWith("_percentile")));
+}

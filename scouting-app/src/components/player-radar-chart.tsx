@@ -13,31 +13,33 @@ interface PlayerRadarChartProps {
 const PlayerRadarChart: React.FC<PlayerRadarChartProps> = ({ player }) => {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const [dimensions, setDimensions] = React.useState({ width: 400, height: 400 });
-
-    useEffect(() => {
-        const updateDimensions = () => {
-            if (containerRef.current) {
-                const width = containerRef.current.offsetWidth;
-                const height = containerRef.current.offsetHeight;
-                setDimensions({ width, height });
-            }
-        }
-        updateDimensions();
-
-        const resizeObserver = new ResizeObserver(updateDimensions);
-        if (containerRef.current) {
-            resizeObserver.observe(containerRef.current);
-        }
-        return () => {
-            if (containerRef.current) {
-                resizeObserver.unobserve(containerRef.current);
-            }
-        };
-    }, []);
+  const [dimensions, setDimensions] = React.useState({
+    width: 400,
+    height: 400,
+  });
 
   useEffect(() => {
+    const updateDimensions = () => {
+      if (containerRef.current) {
+        const width = containerRef.current.offsetWidth;
+        const height = containerRef.current.offsetHeight;
+        setDimensions({ width, height });
+      }
+    };
+    updateDimensions();
 
+    const resizeObserver = new ResizeObserver(updateDimensions);
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+    return () => {
+      if (containerRef.current) {
+        resizeObserver.unobserve(containerRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     const { width, height } = dimensions;
     if (width === 0 || height === 0) return;
 
@@ -45,7 +47,7 @@ const PlayerRadarChart: React.FC<PlayerRadarChartProps> = ({ player }) => {
 
     const margin = 100;
     const radius = Math.min(width, height) / 2 - margin;
-    const maxValue = 100; 
+    const maxValue = 100;
     const numAxes = data.length;
     const angleSlice = (Math.PI * 2) / numAxes;
     const dynamicFontSize = Math.min(width, height) * 0.01;
@@ -69,7 +71,7 @@ const PlayerRadarChart: React.FC<PlayerRadarChartProps> = ({ player }) => {
     // Draw concentric circles (grid lines)
     const levels = 5;
     for (let i = 1; i <= levels; i++) {
-        svg
+      svg
         .append("circle")
         .attr("r", (radius / levels) * i)
         .attr("fill", "none")
@@ -77,10 +79,10 @@ const PlayerRadarChart: React.FC<PlayerRadarChartProps> = ({ player }) => {
         .attr("stroke-dasharray", "2,2")
         .attr("stroke-width", 0.5);
 
-        const labelX = ((radius / levels) * i + 10) * Math.cos(-Math.PI / 2.3);
-        const labelY = ((radius / levels) * i + 5) * Math.sin(-Math.PI / 2.3);
+      const labelX = ((radius / levels) * i + 10) * Math.cos(-Math.PI / 2.3);
+      const labelY = ((radius / levels) * i + 5) * Math.sin(-Math.PI / 2.3);
 
-        svg
+      svg
         .append("text")
         .attr("x", labelX)
         .attr("y", labelY)
@@ -93,44 +95,44 @@ const PlayerRadarChart: React.FC<PlayerRadarChartProps> = ({ player }) => {
 
     // Draw axes and labels for each metric
     data.forEach((d, i) => {
-        const angle = angleSlice * i - Math.PI / 2;
-        const xAxis = rScale(maxValue) * Math.cos(angle);
-        const yAxis = rScale(maxValue) * Math.sin(angle);  
+      const angle = angleSlice * i - Math.PI / 2;
+      const xAxis = rScale(maxValue) * Math.cos(angle);
+      const yAxis = rScale(maxValue) * Math.sin(angle);
 
-        // Axis line
-        svg
-          .append("line")
-          .attr("x1", 0)
-          .attr("y1", 0)
-          .attr("x2", xAxis)
-          .attr("y2", yAxis)
-          .attr("stroke", "#999")
-          .attr("stroke-width", 1); 
+      // Axis line
+      svg
+        .append("line")
+        .attr("x1", 0)
+        .attr("y1", 0)
+        .attr("x2", xAxis)
+        .attr("y2", yAxis)
+        .attr("stroke", "#999")
+        .attr("stroke-width", 1);
 
-        // Axis label (positioned beyond the outer grid circle)
-        const labelX = (rScale(maxValue) * 1.1) * Math.cos(angle);
-        const labelY = (rScale(maxValue) * 1.1) * Math.sin(angle);
-        const rotate = (angle * 180) / Math.PI + 90;
+      // Axis label (positioned beyond the outer grid circle)
+      const labelX = rScale(maxValue) * 1.1 * Math.cos(angle);
+      const labelY = rScale(maxValue) * 1.1 * Math.sin(angle);
+      const rotate = (angle * 180) / Math.PI + 90;
 
-        svg
-          .append("text")
-          .attr("x", labelX)
-          .attr("y", labelY)
-          .attr("transform", `rotate(${rotate})`)
-          .attr("transform-origin", `${labelX} ${labelY}`)
-          .attr("text-anchor", "middle")
-          .attr("font-size", `${dynamicFontSizeLabel}px`)
-          .attr("font-family", "Arial")
-          .attr("font-weight", "bold")
-          .attr("fill", "#333")
-          .text(d.axis);
+      svg
+        .append("text")
+        .attr("x", labelX)
+        .attr("y", labelY)
+        .attr("transform", `rotate(${rotate})`)
+        .attr("transform-origin", `${labelX} ${labelY}`)
+        .attr("text-anchor", "middle")
+        .attr("font-size", `${dynamicFontSizeLabel}px`)
+        .attr("font-family", "Arial")
+        .attr("font-weight", "bold")
+        .attr("fill", "#333")
+        .text(d.axis);
     });
 
     // Add title
     svg
       .append("text")
       .attr("x", 0)
-      .attr("y", `${(radius * 1.22) * Math.sin(-Math.PI / 2.3)}`)
+      .attr("y", `${radius * 1.22 * Math.sin(-Math.PI / 2.3)}`)
       .attr("text-anchor", "middle")
       .attr("font-size", `${dynamicFontSize * 2}px`)
       .attr("font-family", "Arial")
@@ -170,8 +172,8 @@ const PlayerRadarChart: React.FC<PlayerRadarChartProps> = ({ player }) => {
     // Add percentiles as text labels
     data.forEach((d, i) => {
       const angle = angleSlice * i - Math.PI / 2;
-      const x = (rScale(d.value) * 1.05) * Math.cos(angle);
-      const y = (rScale(d.value) * 1.05) * Math.sin(angle);
+      const x = rScale(d.value) * 1.05 * Math.cos(angle);
+      const y = rScale(d.value) * 1.05 * Math.sin(angle);
       const rotate = (angle * 180) / Math.PI + 90;
       svg
         .append("text")
@@ -190,10 +192,9 @@ const PlayerRadarChart: React.FC<PlayerRadarChartProps> = ({ player }) => {
 
   return (
     <div ref={containerRef} className="w-full h-full">
-        <svg ref={svgRef} className="mx-auto w-full h-full" />
+      <svg ref={svgRef} className="mx-auto w-full h-full" />
     </div>
   );
 };
 
 export default PlayerRadarChart;
-
