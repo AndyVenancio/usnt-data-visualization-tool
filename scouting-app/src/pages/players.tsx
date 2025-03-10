@@ -7,10 +7,12 @@ import { getAgeInYears } from "../utils/get-stat";
 import PlayerRow from "../components/player-row";
 import PlayerRadarChart from "../components/player-radar-chart";
 import PlayerStatsIndividual from "../components/player-stats-individual";
-import ComparisonGraph from "../components/comparison-graph";
+import ComparisonGraph from "../components/comparison-bar-graph";
+import ComparisonRadarGraph from "../components/comparison-radar-graph";
 
 function Players(): React.JSX.Element {
   const [players, setPlayers] = useState<Player[]>([]);
+  const [filteredPlayers, setFilteredPlayers] = useState<Player[]>([]);
   const [topStats, setTopStats] = useState<{
     [player_name: string]: [string, number, string, number][];
   }>({});
@@ -19,11 +21,13 @@ function Players(): React.JSX.Element {
   );
   const [section, setSection] = useState<string>(""); // Used to determine whether we are showing players, a specific player, or a comparison
   const [selectedPlayers, setSelectedPlayers] = useState<Player[]>([]); // Max 2 players for comparison
+  const [isHidden, setIsHidden] = useState<boolean>(true); // Used to hide the player list when switching to a specific player or comparison
 
   useEffect(() => {
     const fetchData = async () => {
       const playerData = await getPlayerData();
       setPlayers(playerData);
+      setFilteredPlayers(playerData);
       const topStatsData = playerData.map((player: Player) => {
         const topStats = getTopStats(player);
         return [player.player_name, topStats];
@@ -33,6 +37,19 @@ function Players(): React.JSX.Element {
     fetchData();
     setSection("players");
   }, []);
+
+  useEffect(() => {
+    if (section === "players" || section === "compare") {
+      // When switching to an active section, immediately show the element
+      setIsHidden(false);
+    } else {
+      // When hiding, wait for the transition to finish
+      const timer = setTimeout(() => {
+        setIsHidden(true);
+      }, 800); // same duration as your transition (800ms)
+      return () => clearTimeout(timer);
+    }
+  }, [section]);
 
   const getPosition = (player: Player): string => {
     const abv = player.position_general.split("_")[0].toUpperCase();
@@ -83,22 +100,55 @@ function Players(): React.JSX.Element {
   return (
     // Outline
     // Page Heading with title "Scouting App"
+    // Buttons to switch between Players and Compare Mode 
     // Player List with Player Rows
-    // Player Rows are clickable and link to the player page
+    // Player Rows are clickable and show player stats when clicked
+    // Player Comparison when 2 players are selected
+    // Player Comparison shows player stats and comparison graphs
     <div className="flex flex-col w-full min-h-screen bg-gray-50">
       {/* Page Heading */}
       <nav className="flex flex-col border-b border-gray-200 bg-white shadow-2xs p-3">
-        <div className="flex flex-row items-center justify-between">
+        <div className="flex flex-row items-center justify-between w-full">
           <h1 className="text-3xl font-bold">Scouting App</h1>
+          {/* Search Bar */}
+            <div className={`relative w-1/3 flex items-center ${isHidden ? "hidden" : ""}`}>
+                <input
+                    type="text"
+                    placeholder="Search..."
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    onChange={(e) => {
+                        const filtered = players.filter((player) =>
+                            player.player_name.toLowerCase().includes(e.target.value.toLowerCase())
+                        );
+                        setFilteredPlayers(filtered);
+                    }}
+                />
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="absolute top-1/2 right-4 transform -translate-y-1/2 size-6 text-gray-500"
+                >
+                    <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M21 21l-6-6m2.5-5.5a7.5 7.5 0 11-15 0 7.5 7.5 0 0115 0z"
+                    />
+                </svg>
+            </div>
+
+            {/* Buttons */}
           <div className="flex flex-row items-center justify-center space-x-6">
             <button
-              className="px-6 py-2 transition delay-100 duration-250 ease-in-out hover:scale-110 text-sm text-center font-bold text-black hover:text-gray-800 size-auto border border-emerald-500 rounded bg-emerald-400 shadow"
+              className="px-4 py-2 transition delay-100 duration-250 ease-in-out hover:scale-110 text-sm text-center font-bold text-black hover:text-gray-800 size-auto border border-emerald-500 rounded bg-emerald-400 shadow"
               onClick={onClickCompareButton}
             >
               Compare Mode
             </button>
             <button
-              className="px-6 py-2 transition delay-100 duration-250 ease-in-out hover:scale-110 text-sm text-center font-bold text-black hover:text-gray-800 size-auto border border-emerald-500 rounded bg-emerald-400 shadow"
+              className="px-4 py-2 transition delay-100 duration-250 ease-in-out hover:scale-110 text-sm text-center font-bold text-black hover:text-gray-800 size-auto border border-emerald-500 rounded bg-emerald-400 shadow"
               onClick={onClickPlayersButton}
             >
               Players
@@ -109,11 +159,11 @@ function Players(): React.JSX.Element {
 
       {/* Player List */}
       <div
-        className={`flex flex-col items-center justify-center w-full p-4 transition-all ease-in-out duration-800 delay-200 transform ${
+        className={`flex flex-col items-center justify-center w-full transition-all ease-in-out duration-800 delay-200 transform ${
           section === "players" || section === "compare"
             ? "opacity-100 translate-y-0 scale-y-100"
-            : "opacity-0 translate-y-10 scale-y-0 absolute top-0 left-0 origin-top pointer-events-none"
-        }`}
+            : "opacity-0 translate-y-10 scale-y-0 origin-top pointer-events-none"
+         } ${isHidden ? "absolute" : ""}`}
       >
         <div className="flex flex-col items-center justify-center w-full p4">
           <div className="flex flex-col items-center justify-evenly w-full max-w-4xl p-4">
@@ -121,11 +171,11 @@ function Players(): React.JSX.Element {
               <div className="relative flex w-full border-b border-gray-200 bg-emerald-400 p-4">
                 <span className="text-lg font-bold">Players</span>
                 <span className="absolute left-[70%] transform -translate-x-1/2 text-lg font-bold">
-                  Top 2 Stats
+                  Top Statistics
                 </span>
               </div>
               <div className="flex flex-col w-full">
-                {players.map((player) => (
+                {filteredPlayers.map((player) => (
                   <PlayerRow
                     key={player.player_name}
                     player={player}
@@ -158,14 +208,14 @@ function Players(): React.JSX.Element {
 
       {/* Player Individual Statistics */}
       <div
-        className={`flex flex-row items-center w-full transition-all ease-in delay-500 duration-800 ${
+        className={`flex flex-row items-center w-full transition-all ease-in delay-800 duration-800 ${
           section === "single-player"
             ? "opacity-100"
             : "opacity-0 pointer-events-none"
         }`}
       >
         <div
-          className={`w-1/2 h-max transition-all ease-in-out duration-700 dela-500 transform ${
+          className={`w-1/2 h-max transition-all ease-in-out duration-700 delay-800 transform ${
             section === "single-player"
               ? "opacity-100 translate-x-0"
               : "opacity-0 -translate-x-10"
@@ -175,7 +225,7 @@ function Players(): React.JSX.Element {
         </div>
 
         <div
-          className={`w-1/2 transition-all ease-in-out duration-700 dela-500 transform ${
+          className={`w-1/2 transition-all ease-in-out duration-700 delay-800 transform ${
             section === "single-player"
               ? "opacity-100 -translate-x-0"
               : "opacity-0 translate-x-10"
@@ -187,7 +237,7 @@ function Players(): React.JSX.Element {
 
       {/* Player Comparison */}
       <div
-        className={`flex flex-col items-center w-full transition-all ease-in-out delay-500 duration-800 ${
+        className={`flex flex-col items-center w-full transition-all ease-in-out delay-800 duration-800 ${
           section === "comparing"
             ? "opacity-100"
             : "opacity-0 pointer-events-none"
@@ -244,6 +294,9 @@ function Players(): React.JSX.Element {
         <div className="flex flex-row items-center justify-center w-full p-4">
           {section === "comparing" && (
             <ComparisonGraph players={selectedPlayers} />
+          )}
+          {section === "comparing" && (
+            <ComparisonRadarGraph players={selectedPlayers} />
           )}
         </div>
       </div>

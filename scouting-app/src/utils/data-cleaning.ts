@@ -11,7 +11,7 @@ export const cleanDataRadar = (
       ([key, value]) => key.endsWith("_percentile") && typeof value === "number"
     ) // Ensure valid percentile data
     .map(([key, value]) => ({
-      axis: translateStatName(key.replace("_percentile", "")), // Transform the key into a readable name
+      axis: translateStatName(key.replace("_percentile", "")),
       value: value as number,
     }));
 };
@@ -23,7 +23,7 @@ export const cleanDataComparison = (
     return players.map((player) => ({
       player_name: player.player_name,
       stats: Object.entries(player)
-        .filter(([key, value]) => !key.endsWith("_percentile") && typeof value === "number" && key !== "season_name") // Ensure valid data
+        .filter(([key, value]) => !key.endsWith("_percentile") && typeof value === "number" && key !== "season_name")
         .map(([key, value]) => ({ key: translateStatName(key), value: key.includes('percentage') ?  (value as number) * 100 : value as number })),
     }));
   }

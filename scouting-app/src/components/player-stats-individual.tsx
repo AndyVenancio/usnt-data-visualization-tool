@@ -15,7 +15,7 @@ interface PlayerStatsIndividualProps {
 const PlayerStatsIndividual: React.FC<PlayerStatsIndividualProps> = ({
   player,
 }) => {
-  const playerStats: string[] = getOnlyStatsNames(player);
+  const playerStats: string[] = getOnlyStatsNames(player); // get only the stats names to call the component 
   return (
     <div className="flex flex-col items-center justify-center w-full p-4">
       <div className="flex flex-row items-center w-full border-b border-gray-200 pb-4">
