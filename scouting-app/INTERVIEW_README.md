@@ -38,3 +38,5 @@ or, if you prefer npm
     npm install
     npm run dev
 ```
+
+A link when then appear in your command line. Click it to open the application.
